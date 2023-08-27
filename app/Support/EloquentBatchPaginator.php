@@ -38,11 +38,6 @@ class EloquentBatchPaginator
         return $this->startingFromId + $this->chunkSize;
     }
 
-    public function count()
-    {
-        return app($this->model)::query()->count();
-    }
-
     public function chunkById(callable $callback)
     {
         return $this->model()

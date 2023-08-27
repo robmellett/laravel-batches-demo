@@ -39,7 +39,18 @@ class EloquentBatchPaginatorTest extends TestCase
         );
 
         // Note:
-        // We can't use limit() here. It will not work with chunkById().
+        // We can't use limit() here. It will not work with chunkById() as its not respected by the query builder.
+        // Customer::query()
+        //     ->where('id', '>=', $paginator->fromChunkId())
+        //     ->limit(100)
+        //     ->chunkById(100, function ($customers) use ($paginator) {
+        //         $customers->each(function (Customer $customer) use ($paginator) {
+        //             ray($customer->id);
+        //         });
+        //     });
+
+
+        // Feels like it's better to do this instead.
         Customer::query()
             ->where('id', '>=', $paginator->fromChunkId())
             ->where('id', '<', $paginator->untilChunkId())
