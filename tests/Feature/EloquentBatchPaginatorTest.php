@@ -140,7 +140,7 @@ class EloquentBatchPaginatorTest extends TestCase
     public function serializable_closure()
     {
         $expected = Customer::query()->where('name', 'like', '%John%');
-        
+
         $closure = function () {
             return Customer::query()->where('name', 'like', '%John%');
         };
