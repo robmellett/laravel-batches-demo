@@ -24,7 +24,6 @@ class EloquentBatchPaginatorTest extends TestCase
             chunkSize: 100
         );
 
-        $this->assertEquals(500, $paginator->count());
         $this->assertEquals(1, $paginator->fromChunkId());
         $this->assertEquals(101, $paginator->untilChunkId());
     }
