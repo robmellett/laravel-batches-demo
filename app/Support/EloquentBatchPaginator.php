@@ -4,15 +4,21 @@ namespace App\Support;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Laravel\SerializableClosure\SerializableClosure;
 
 class EloquentBatchPaginator
 {
+    protected ?SerializableClosure $query;
+
     public function __construct(
         protected string $model,
-        protected ?Closure $query = null,
+        ?Closure $query = null,
         protected int $startingFromId = 1,
         protected int $chunkSize = 1000,
     ) {
+        $this->query = $query
+            ? new SerializableClosure($query)
+            : null;
     }
 
     public static function make(...$args)
@@ -42,14 +48,18 @@ class EloquentBatchPaginator
 
     public function query(): Builder
     {
-        if (! $this->query) {
+        $query = $this->query instanceof SerializableClosure
+            ? $this->query->getClosure()
+            : $this->query;
+
+        if (! $query) {
             return $this->model()
                 ->where('id', '>=', $this->fromChunkId())
                 ->where('id', '<', $this->untilChunkId());
         }
 
         return $this->model()
-            ->setQuery(call_user_func($this->query)->getQuery())
+            ->setQuery(call_user_func($query)->getQuery())
             ->where('id', '>=', $this->fromChunkId())
             ->where('id', '<', $this->untilChunkId());
     }

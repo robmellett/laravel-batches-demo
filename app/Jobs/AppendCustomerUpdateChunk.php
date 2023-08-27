@@ -31,7 +31,7 @@ class AppendCustomerUpdateChunk implements ShouldQueue
         $this->paginator->chunkById(function ($customers) {
             $customers->each(function ($customer) {
 
-                ray("Updating customer $customer->id");
+                ray($customer->id . ' : ' . $customer->name);
 
                 // $this->batch()->add(
                 //     new UpdateCustomerJob($customer)

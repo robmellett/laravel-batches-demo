@@ -7,6 +7,7 @@ use App\Support\EloquentBatchPaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\SerializableClosure\SerializableClosure;
 use Tests\TestCase;
 
 class EloquentBatchPaginatorTest extends TestCase
@@ -133,5 +134,20 @@ class EloquentBatchPaginatorTest extends TestCase
         );
 
         $this->assertSame($expectingQuery->toSql(), $paginator->query()->toSql());
+    }
+
+    /** @test */
+    public function serializable_closure()
+    {
+        $expected = Customer::query()->where('name', 'like', '%John%');
+        
+        $closure = function () {
+            return Customer::query()->where('name', 'like', '%John%');
+        };
+
+        $serialized = serialize(new SerializableClosure($closure));
+        $closure = unserialize($serialized)->getClosure();
+
+        $this->assertSame($expected->toSql(), $closure()->toSql());
     }
 }
