@@ -2,12 +2,13 @@
 
 namespace App\Support;
 
-use App\Models\Customer;
+use Closure;
 
 class EloquentBatchPaginator
 {
     public function __construct(
         protected string $model,
+        protected Closure $query,
         protected int $startingFromId = 1,
         protected int $chunkSize = 1000,
     ) {
@@ -38,12 +39,17 @@ class EloquentBatchPaginator
         return $this->startingFromId + $this->chunkSize;
     }
 
-    public function chunkById(callable $callback)
+    public function query()
     {
         return $this->model()
-            ->query()
+            ->setQuery(call_user_func($this->query)->getQuery())
             ->where('id', '>=', $this->fromChunkId())
-            ->where('id', '<', $this->untilChunkId())
+            ->where('id', '<', $this->untilChunkId());
+    }
+
+    public function chunkById(callable $callback)
+    {
+        return $this->query()
             ->chunkById($this->chunkSize(), $callback);
     }
 }

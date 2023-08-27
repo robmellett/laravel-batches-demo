@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Support\EloquentBatchPaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
 
@@ -76,10 +78,61 @@ class EloquentBatchPaginatorTest extends TestCase
         );
 
         $paginator
-            ->chunkById(function ($customers) use ($paginator) {
+            ->chunkById(function (Collection $customers) use ($paginator) {
                 $customers->each(function (Customer $customer) use ($paginator) {
                     ray($customer->id);
                 });
             });
+    }
+
+    /** @test */
+    public function can_query_fluently()
+    {
+        Customer::factory()
+            ->count(500)
+            ->state(
+                new Sequence(
+                    ['name' => 'Tom'],
+                    ['name' => 'Jerry'],
+                    ['name' => 'John'],
+                )
+            )
+            ->create();
+
+        $paginator = EloquentBatchPaginator::make(
+            model: Customer::class,
+            query: function () {
+                return Customer::query()->where('name', 'like', '%John%');
+            },
+            startingFromId: 101,
+            chunkSize: 100
+        );
+
+        $paginator
+            ->chunkById(function (Collection $customers) use ($paginator) {
+                $customers->each(function (Customer $customer) use ($paginator) {
+                    ray($customer->id . ' : ' . $customer->name);
+                });
+            });
+    }
+
+    /** @test */
+    public function paginator_query_instances_match()
+    {
+        $expectingQuery = Customer::query()
+            ->where('name', 'like', '%John%')
+            ->where('id', '>=', 1)
+            ->where('id', '<', 101);
+
+        $paginator = EloquentBatchPaginator::make(
+            model: Customer::class,
+            query: function () {
+                return Customer::query()->where('name', 'like', '%John%');
+            },
+            startingFromId: 101,
+            chunkSize: 100
+        );
+
+        $this->assertSame($expectingQuery->toSql(), $paginator->query()->toSql());
     }
 }
