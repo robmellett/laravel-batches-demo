@@ -35,6 +35,9 @@ class CreateCustomerUpdateBatchJob implements ShouldQueue
 
                 $paginator = EloquentBatchPaginator::make(
                     model: Customer::class,
+                    query: function () {
+                        return Customer::query()->where('name', 'like', '%John%');
+                    },
                     startingFromId: $customers->first()->id,
                     chunkSize: 100
                 );
